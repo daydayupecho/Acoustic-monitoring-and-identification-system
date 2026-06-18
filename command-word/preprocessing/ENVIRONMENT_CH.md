@@ -12,14 +12,14 @@ audit_wav_and_metadata.py
 ## 1. 推荐环境
 
 - 操作系统：Windows 10/11
-- PowerShell：7 
+- PowerShell：7
 - Python：实验命令使用 Python 3.10；ST 官方 STDATALOG-PYSDK 也兼容 Python 3.10、3.11、3.12 和 3.13
 - Git：用于递归克隆 STDATALOG-PYSDK 及其子模块
 - ST DATALOG / STDATALOG Python SDK：用于 `.dat` 到 `.wav` 转换
 - `openpyxl`：用于导出 XLSX 格式失败报告
 - 后处理脚本运行环境：用于执行 `generate_metadata_and_restructure.py` 并生成 `metadata.csv`
 
-本目录中的 `convert_stdatalog_to_wav.ps1` 不是完全独立脚本。为了复现本文处理流程，建议将该脚本复制到 ST 官方 `STDATALOG-PYSDK\stdatalog-pysdk` 根目录下运行。
+本目录中的 `convert_stdatalog_to_wav.ps1` 不是完全独立脚本。为了运行本文处理流程，建议将该脚本复制到 ST 官方 `STDATALOG-PYSDK\stdatalog-pysdk` 根目录下运行。
 
 推荐放置位置：
 
@@ -178,7 +178,7 @@ $Out = "<COMMAND_DATASET_ROOT>\wav"
 $StageRoot = "C:\_wav_stage"
 ```
 
-注意：脚本开头的路径应以当前复现环境为准，请按本节和第 6 节设置。
+注意：脚本开头的路径应以当前本机环境为准，请按本节和第 6 节设置。
 
 ## 6. 需要根据本机环境设置的参数
 
@@ -225,7 +225,7 @@ $PrepareTestRatio
 $PrepareSeed
 ```
 
-注意：`$PrepareScript` 和 `$PyPrepare` 需要指向当前复现环境中的后处理脚本和 Python 解释器。若只需要复现 `.dat` 到 `.wav` 转换，可先将 `$DoPrepareDataset` 设置为 `$false`，再手动整理 `metadata.csv`。
+注意：`$PrepareScript` 和 `$PyPrepare` 需要指向当前本机环境中的后处理脚本和 Python 解释器。若只需要执行 `.dat` 到 `.wav` 转换，可先将 `$DoPrepareDataset` 设置为 `$false`，再手动整理 `metadata.csv`。
 
 推荐设置方式：
 
@@ -407,7 +407,7 @@ audit_report.csv
 
 用于定位 `metadata.csv` 中记录存在但 WAV 缺失、WAV 无法读取或长度不足的样本。
 
-## 11. 复现检查清单
+## 11. 配置检查清单
 
 1. `stdatalog-pysdk` 是否来自 ST 官方仓库。
 2. 是否使用 `git clone --recursive` 获取子模块。

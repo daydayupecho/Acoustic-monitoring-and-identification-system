@@ -19,7 +19,7 @@ audit_wav_and_metadata.py
 - `openpyxl`: used to export XLSX-format failure reports
 - Post-processing script environment: used to run `generate_metadata_and_restructure.py` and generate `metadata.csv`
 
-The `convert_stdatalog_to_wav.ps1` script in this directory is not a fully standalone script. To reproduce the preprocessing workflow in this study, copy this script into the root directory of the official ST `STDATALOG-PYSDK\stdatalog-pysdk` package and run it there.
+The `convert_stdatalog_to_wav.ps1` script in this directory is not a fully standalone script. To run the preprocessing workflow in this study, copy this script into the root directory of the official ST `STDATALOG-PYSDK\stdatalog-pysdk` package and run it there.
 
 Recommended location:
 
@@ -178,7 +178,7 @@ $Out = "<COMMAND_DATASET_ROOT>\wav"
 $StageRoot = "C:\_wav_stage"
 ```
 
-The paths at the beginning of the script should match the current reproduction environment. Configure them according to this section and Section 6.
+The paths at the beginning of the script should match the current local environment. Configure them according to this section and Section 6.
 
 ## 6. Parameters to Set for the Local Environment
 
@@ -225,7 +225,7 @@ $PrepareTestRatio
 $PrepareSeed
 ```
 
-`$PrepareScript` and `$PyPrepare` must point to the post-processing script and Python interpreter in the current reproduction environment. If only `.dat` to `.wav` conversion is required, set `$DoPrepareDataset` to `$false` first, and then manually organize `metadata.csv`.
+`$PrepareScript` and `$PyPrepare` must point to the post-processing script and Python interpreter in the current local environment. If only `.dat` to `.wav` conversion is required, set `$DoPrepareDataset` to `$false` first, and then manually organize `metadata.csv`.
 
 Recommended settings:
 
@@ -408,7 +408,7 @@ audit_report.csv
 
 This report is used to locate samples that are recorded in `metadata.csv` but missing from the WAV directory, WAV files that cannot be read, or samples whose length is insufficient.
 
-## 11. Reproduction Checklist
+## 11. Configuration Checklist
 
 1. Confirm that `stdatalog-pysdk` is from the official ST repository.
 2. Confirm that `git clone --recursive` was used to obtain submodules.

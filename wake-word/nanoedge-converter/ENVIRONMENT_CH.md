@@ -114,7 +114,7 @@ set "CSV_SHAPE=row"
 - `ODR`：采样率，当前实验为 16 kHz。
 - `CSV_SHAPE`：NanoEdge AI Studio 导入方式，当前建议使用 `row`。
 
-复现时，最常需要设置的是 `ROOT`、`OUT_ALL`、`SL`、`SI`。其中 `SL` 必须与最终 NanoEdge AI Studio 导出库中的 `NEAI_INPUT_SIGNAL_LENGTH` 保持一致。
+使用时，最常需要设置的是 `ROOT`、`OUT_ALL`、`SL`、`SI`。其中 `SL` 必须与最终 NanoEdge AI Studio 导出库中的 `NEAI_INPUT_SIGNAL_LENGTH` 保持一致。
 
 ## 5. 与 NanoEdge AI Studio 的对应关系
 

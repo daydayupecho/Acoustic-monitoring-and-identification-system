@@ -12,13 +12,13 @@ train_command_classifier.ipynb
 ## 1. 推荐环境
 
 - 操作系统：Windows 10/11
-- Python：本文训练环境为 Python 3.10.1；建议复现时使用 Python 3.10.x
+- Python：本文训练环境为 Python 3.10.1；建议使用 Python 3.10.x 运行该流程
 - Visual Studio Code（VS Code）：用于打开和运行 `train_command_classifier.ipynb`
 - VS Code 扩展：Python 扩展，以及 VS Code 对 `.ipynb` 文件的运行支持
 - TensorFlow：建议使用与本机 Python 版本兼容的稳定版本
 - STM32CubeMX / STM32Cube.AI：用于后续导入 `model.tflite` 并生成 MCU C 代码
 
-本目录中的命令词训练脚本是基于 ST 官方 FP-AI-MONITOR2 中的 UltrasoundClassification 示例修改而来。复现训练流程时，建议将本目录两个文件复制到官方 FP-AI-MONITOR2 的对应示例目录下运行。
+本目录中的命令词训练脚本是基于 ST 官方 FP-AI-MONITOR2 中的 UltrasoundClassification 示例修改而来。运行训练流程时，建议将本目录两个文件复制到官方 FP-AI-MONITOR2 的对应示例目录下运行。
 
 推荐放置位置：
 
@@ -47,7 +47,7 @@ Utilities\AI_Resources\TrainingScripts\UltrasoundClassification
 
 ## 2. PowerShell 创建训练虚拟环境 `usc_train`
 
-命令词模型训练在 ST 官方 FP-AI-MONITOR2 的 `UltrasoundClassification` 示例基础上完成。复现时，建议先下载并解压 FP-AI-MONITOR2，然后在该官方包根目录下创建独立虚拟环境 `usc_train`。
+命令词模型训练在 ST 官方 FP-AI-MONITOR2 的 `UltrasoundClassification` 示例基础上完成。建议先下载并解压 FP-AI-MONITOR2，然后在该官方包根目录下创建独立虚拟环境 `usc_train`。
 
 以下以实验使用的目录为例：
 
@@ -61,7 +61,7 @@ D:\workspace\project\keil\thesis_speech_recognition
 Utilities\AI_Resources\TrainingScripts\UltrasoundClassification
 ```
 
-读者复现时，请将下面命令中的路径替换为本机 FP-AI-MONITOR2 解压目录。
+读者运行该流程时，请将下面命令中的路径替换为本机 FP-AI-MONITOR2 解压目录。
 
 ### 2.1 进入 FP-AI-MONITOR2 根目录
 
@@ -210,11 +210,11 @@ UltrasoundClassification.ipynb
 train_command_classifier.ipynb
 ```
 
-本文训练和复现说明均以 `train_command_classifier.ipynb` 为准。
+本文训练说明均以 `train_command_classifier.ipynb` 为准。
 
 ## 3. 训练 Notebook 需要设置的关键参数
 
-在 VS Code 中运行 `train_command_classifier.ipynb` 前，需要根据当前复现环境设置数据路径、输入帧长和类别列表。本文训练流程主要修改以下参数。
+在 VS Code 中运行 `train_command_classifier.ipynb` 前，需要根据当前本机环境设置数据路径、输入帧长和类别列表。本文训练流程主要修改以下参数。
 
 ### 3.1 数据集路径
 
@@ -251,7 +251,7 @@ dataset_path = 'E:/SPEECH_DATA/TENG/touming-dataset/command-20260315-merge/'
 frame_len = 512 * 60 + 1
 ```
 
-实际复现时，`frame_len` 需要与前处理阶段的 WAV 长度检查、训练特征提取参数以及固件端命令词前端保持一致。
+实际运行时，`frame_len` 需要与前处理阶段的 WAV 长度检查、训练特征提取参数以及固件端命令词前端保持一致。
 
 ### 3.3 类别列表
 
@@ -280,7 +280,7 @@ classes = [
 
 ## 4. 其他需要根据本机环境设置的训练参数和路径
 
-运行 Notebook 前，需要根据当前复现环境设置以下内容：
+运行 Notebook 前，需要根据当前本机环境设置以下内容：
 
 - 数据集根目录，例如 `dataset` 或 `dataset_path`。
 - `metadata.csv` 所在目录。
@@ -458,7 +458,7 @@ https://www.st.com/en/development-tools/stm32cubemx.html
 https://www.st.com/en/embedded-software/x-cube-ai.html
 ```
 
-## 9. 复现检查清单
+## 9. 配置检查清单
 
 1. 下载并解压 ST 官方 FP-AI-MONITOR2。
 2. 将 `prepare_command_dataset.py` 和 `train_command_classifier.ipynb` 放入官方 `Utilities\AI_Resources\TrainingScripts\UltrasoundClassification` 目录。

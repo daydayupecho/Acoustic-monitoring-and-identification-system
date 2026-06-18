@@ -116,7 +116,7 @@ Parameter meanings:
 - `ODR`: sampling rate, 16 kHz in the current experiments.
 - `CSV_SHAPE`: NanoEdge AI Studio import layout. The current recommendation is `row`.
 
-For reproduction, the most commonly modified variables are `ROOT`, `OUT_ALL`, `SL`, and `SI`. `SL` must be consistent with `NEAI_INPUT_SIGNAL_LENGTH` in the final library exported by NanoEdge AI Studio.
+For local use, the most commonly modified variables are `ROOT`, `OUT_ALL`, `SL`, and `SI`. `SL` must be consistent with `NEAI_INPUT_SIGNAL_LENGTH` in the final library exported by NanoEdge AI Studio.
 
 ## 5. Relationship with NanoEdge AI Studio
 

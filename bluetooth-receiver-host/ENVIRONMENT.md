@@ -1,8 +1,8 @@
-# Environment Setup: Bluetooth Receiver UART Host
+# Environment Setup: Appliance-State Monitoring Host
 
 [Chinese version](ENVIRONMENT_CH.md)
 
-This directory contains the MATLAB host application, communication documentation, and interface assets used to display the parsed results from the Bluetooth receiver. The MATLAB App does not directly receive data from the Bluetooth transmitter. Instead, it receives the parsed results output by the Bluetooth receiver through the PC serial port.
+This directory contains the MATLAB host application, communication documentation, and interface assets used to synchronously display appliance states and parsed results from the Bluetooth receiver. The MATLAB App does not directly receive data from the Bluetooth transmitter. Instead, it receives the parsed results output by the Bluetooth receiver through the PC serial port.
 
 Main files:
 

@@ -11,8 +11,8 @@ The repository contains:
 - Command-word preprocessing scripts
 - Command-word recognition model training scripts
 - An STM32 embedded firmware project
-- Bluetooth receiver UART host software and interface resources
-- Circuit diagrams and documentation figures for hardware reference
+- UART-based PC monitoring software for synchronized display of appliance states
+- Circuit diagrams of the core board, expansion board, and Bluetooth receiver-relay control board
 
 ## Repository Structure
 
@@ -26,8 +26,8 @@ Acoustic-monitoring-and-identification-system/
 │   └── model-training/
 ├── stm32-firmware/                # STM32 embedded firmware project
 │   └── Tx_LowPower_echo/
-├── bluetooth-receiver-host/       # Bluetooth receiver UART host software and UI resources
-└── docs/                          # Reproduction documents and circuit diagrams
+├── bluetooth-receiver-host/       # UART-based PC monitoring software for appliance-state display
+└── docs/                          # Documentation and hardware circuit diagrams
     └── circuit-diagrams/
 ```
 
@@ -127,7 +127,7 @@ Main functions:
 
 Runtime environment:
 
-- PowerShell 7 or later.
+- PowerShell 7.
 - ST DATALOG/STDATALOG Python SDK environment.
 - Copy the script to `<STDATALOG-PYSDK_ROOT>\stdatalog-pysdk\`, then configure the STDATALOG-PYSDK environment, script location, and path parameters according to Sections 3-6 of `command-word/preprocessing/ENVIRONMENT.md`.
 - `$Py` should point to the Python interpreter in the STDATALOG-PYSDK virtual environment, for example `<STDATALOG-PYSDK_ROOT>\stdatalog-pysdk\.venv_dlog\Scripts\python.exe`.
@@ -263,7 +263,7 @@ Run modes:
 
 Path: `bluetooth-receiver-host/`
 
-This directory stores the Bluetooth receiver UART host program, communication documentation, and interface resources. Consistent with Supporting Information Fig. S36, the MATLAB App does not directly receive Bluetooth wireless-link data and does not participate in speech recognition or control decisions. It only receives relay states, parsed results, or status strings from the Bluetooth receiver through the PC serial port/UART, and displays them on the host interface.
+This directory stores the UART-based PC monitoring software for synchronized appliance-state display and the related communication documentation. Consistent with Supporting Information Fig. S36, the MATLAB App does not directly receive Bluetooth wireless-link data and does not participate in speech recognition or control decisions. It only receives relay states, parsed results, or status strings from the Bluetooth receiver through the PC serial port/UART, and displays them on the host interface.
 
 Main contents:
 
@@ -351,11 +351,11 @@ Detailed environment setup, official download links, required file locations, an
 | Command-word training | `command-word/model-training/ENVIRONMENT.md` | Required placement under FP-AI-MONITOR2 UltrasoundClassification, training dependencies, `model.tflite` export |
 | STM32 firmware overview | `stm32-firmware/ENVIRONMENT.md` | STM32CubeU5 official directory and model integration overview |
 | STM32 firmware project | `stm32-firmware/Tx_LowPower_echo/ENVIRONMENT.md` | Required placement under the STM32CubeU5 ThreadX directory, NanoEdge AI and STM32Cube.AI integration |
-| Bluetooth receiver UART host | `bluetooth-receiver-host/ENVIRONMENT.md` | MATLAB App, UART serial receiving, interface resources |
+| Appliance-state monitoring host | `bluetooth-receiver-host/ENVIRONMENT.md` | MATLAB App, UART serial receiving, synchronized appliance-state display |
 
 ## 9. Official Software Download Links
 
-The following official tools or packages are required to reproduce the workflow:
+The following official tools or packages are required to run the workflow:
 
 - STM32CubeU5: `https://github.com/STMicroelectronics/STM32CubeU5`
 - STDATALOG-PYSDK: `https://github.com/STMicroelectronics/stdatalog-pysdk`
@@ -365,11 +365,11 @@ The following official tools or packages are required to reproduce the workflow:
 - NanoEdge AI Studio wiki: `https://wiki.st.com/stm32mcu/wiki/AI%3ANanoEdge_AI_Studio`
 - NanoEdge AI Studio download entry: `https://stm32ai.st.com/nanoedge-ai-studio/`
 
-## Reproduction Notes
+## Workflow Notes
 
 - Readers should start from this root README and then refer to each module's `ENVIRONMENT.md` for detailed environment configuration.
 - Data input directories, output directories, Python interpreter paths, and official ST tool paths in scripts should be set according to the local installation.
-- IDE build outputs, cache files, logs, and temporary files are not required inputs for reproducing the workflow and can be regenerated locally.
+- IDE build outputs, cache files, logs, and temporary files are not required inputs for running the workflow and can be regenerated locally.
 - If ST AI libraries, NanoEdge AI libraries, or STM32Cube.AI-generated files are subject to ST software-package or license constraints, follow the official ST packages, tool-exported files, and the instructions in this repository.
 - Large images, animations, presentations, DOCX files, or data files that are not included in the repository should be regenerated according to the documented directory structure and data acquisition workflow.
 - Dataset directory format, dependency installation commands, and key parameters are specified in the corresponding module-level `ENVIRONMENT.md` files.

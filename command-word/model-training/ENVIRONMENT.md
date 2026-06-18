@@ -12,13 +12,13 @@ train_command_classifier.ipynb
 ## 1. Recommended Environment
 
 - Operating system: Windows 10/11
-- Python: the training environment used in this study was Python 3.10.1; Python 3.10.x is recommended for reproduction
+- Python: the training environment used in this study was Python 3.10.1; Python 3.10.x is recommended for this workflow
 - Visual Studio Code (VS Code): used to open and run `train_command_classifier.ipynb`
 - VS Code extensions: Python extension, with VS Code support for running `.ipynb` files
 - TensorFlow: use a stable TensorFlow version compatible with the selected Python version
 - STM32CubeMX / STM32Cube.AI: used later to import `model.tflite` and generate MCU C code
 
-The command-word training scripts in this directory were modified from the `UltrasoundClassification` example in STMicroelectronics FP-AI-MONITOR2. To reproduce the training workflow, copy the two files in this directory into the corresponding official FP-AI-MONITOR2 example directory.
+The command-word training scripts in this directory were modified from the `UltrasoundClassification` example in STMicroelectronics FP-AI-MONITOR2. To run the training workflow, copy the two files in this directory into the corresponding official FP-AI-MONITOR2 example directory.
 
 Recommended location:
 
@@ -47,7 +47,7 @@ Utilities\AI_Resources\TrainingScripts\UltrasoundClassification
 
 ## 2. Create the `usc_train` Virtual Environment in PowerShell
 
-The command-word model training is based on the official FP-AI-MONITOR2 `UltrasoundClassification` example. For reproduction, download and extract FP-AI-MONITOR2 first, and then create an independent virtual environment named `usc_train` under the root directory of the official package.
+The command-word model training is based on the official FP-AI-MONITOR2 `UltrasoundClassification` example. Download and extract FP-AI-MONITOR2 first, and then create an independent virtual environment named `usc_train` under the root directory of the official package.
 
 The experimental path used in this study was:
 
@@ -61,7 +61,7 @@ This directory corresponds to the FP-AI-MONITOR2 root directory and should conta
 Utilities\AI_Resources\TrainingScripts\UltrasoundClassification
 ```
 
-When reproducing the workflow, replace the path in the commands below with the local FP-AI-MONITOR2 extraction directory.
+When running the workflow, replace the path in the commands below with the local FP-AI-MONITOR2 extraction directory.
 
 ### 2.1 Enter the FP-AI-MONITOR2 Root Directory
 
@@ -211,11 +211,11 @@ The reorganized file in this repository is:
 train_command_classifier.ipynb
 ```
 
-The training and reproduction instructions in this document refer to `train_command_classifier.ipynb`.
+The training instructions in this document refer to `train_command_classifier.ipynb`.
 
 ## 3. Key Parameters to Set in the Training Notebook
 
-Before running `train_command_classifier.ipynb` in VS Code, set the dataset path, input frame length, and class list according to the current reproduction environment. The main parameters modified in this training workflow are listed below.
+Before running `train_command_classifier.ipynb` in VS Code, set the dataset path, input frame length, and class list according to the current local environment. The main parameters modified in this training workflow are listed below.
 
 ### 3.1 Dataset Path
 
@@ -252,7 +252,7 @@ dataset_path = 'E:/SPEECH_DATA/TENG/touming-dataset/command-20260315-merge/'
 frame_len = 512 * 60 + 1
 ```
 
-During reproduction, `frame_len` should be consistent with the WAV length check in preprocessing, the training feature-extraction parameters, and the command-word frontend parameters in the firmware.
+When running the workflow, `frame_len` should be consistent with the WAV length check in preprocessing, the training feature-extraction parameters, and the command-word frontend parameters in the firmware.
 
 ### 3.3 Class List
 
@@ -281,7 +281,7 @@ The `background` class is used as the last class by default. In the firmware, th
 
 ## 4. Other Training Parameters and Paths to Set Locally
 
-Before running the Notebook, set the following items according to the local reproduction environment:
+Before running the Notebook, set the following items according to the local environment:
 
 - Dataset root directory, for example `dataset` or `dataset_path`.
 - Directory containing `metadata.csv`.
@@ -457,7 +457,7 @@ https://www.st.com/en/development-tools/stm32cubemx.html
 https://www.st.com/en/embedded-software/x-cube-ai.html
 ```
 
-## 9. Reproduction Checklist
+## 9. Configuration Checklist
 
 1. Download and extract the official ST FP-AI-MONITOR2 package.
 2. Copy `prepare_command_dataset.py` and `train_command_classifier.ipynb` into the official `Utilities\AI_Resources\TrainingScripts\UltrasoundClassification` directory.
