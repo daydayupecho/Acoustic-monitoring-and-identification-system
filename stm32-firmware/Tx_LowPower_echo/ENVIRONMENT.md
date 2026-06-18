@@ -1,144 +1,146 @@
-# 环境配置说明：STM32 固件工程
+# Environment Setup: STM32 Firmware Project
 
-本目录为 STM32U575 平台固件工程，包含数据采集、唤醒词筛选、命令词识别、蓝牙指令输出和低功耗控制逻辑。
+[Chinese version](ENVIRONMENT_CH.md)
 
-## 1. 推荐软件环境
+This directory contains the STM32U575 firmware project, including data acquisition, wake-word screening, command-word recognition, Bluetooth command output, and low-power control logic.
 
-- STM32CubeIDE：建议使用较新的 1.x 版本
-- STM32CubeMX：用于打开 `Tx_LowPower.ioc`
-- STM32Cube.AI / X-CUBE-AI：用于从 `model.tflite` 生成 C 推理代码
-- NanoEdge AI Studio：用于生成唤醒词分类静态库
-- ARM GCC 工具链：随 STM32CubeIDE 安装
-- ST-LINK 驱动：用于下载和调试
+## 1. Recommended Software Environment
 
-ST 官方 NanoEdge AI Studio wiki：
+- STM32CubeIDE: version 1.18.1 is recommended
+- STM32CubeMX: used to open `Tx_LowPower.ioc`
+- STM32Cube.AI / X-CUBE-AI: used to generate C inference code from `model.tflite`
+- NanoEdge AI Studio: used to generate the wake-word classification static library
+- ARM GCC toolchain: installed together with STM32CubeIDE
+- ST-LINK driver: used for flashing and debugging
+
+ST official NanoEdge AI Studio wiki:
 
 ```text
 https://wiki.st.com/stm32mcu/wiki/AI%3ANanoEdge_AI_Studio
 ```
 
-ST 官方 STM32CubeU5 仓库：
+ST official STM32CubeU5 repository:
 
 ```text
 https://github.com/STMicroelectronics/STM32CubeU5
 ```
 
-官方克隆命令：
+Official cloning command:
 
 ```powershell
 git clone --recursive https://github.com/STMicroelectronics/STM32CubeU5.git
 ```
 
-也可以从 ST 官网下载 STM32CubeU5 固件包，但需要保持官方目录结构。
+The STM32CubeU5 firmware package can also be downloaded from the ST website, but the official directory structure must be preserved.
 
-## 2. 硬件目标
+## 2. Hardware Target
 
-当前工程面向：
+The current project targets:
 
 ```text
 STM32U575VGT6
 ```
 
-工程中包含以下工具链目录：
+The project includes the following toolchain directories:
 
 - `STM32CubeIDE/`
 - `MDK-ARM/`
 - `EWARM/`
 
-当前建议优先使用 STM32CubeIDE。
+STM32CubeIDE is currently recommended as the preferred toolchain.
 
-## 3. 必须放置的官方目录
+## 3. Required Official Directory Placement
 
-重要：`Tx_LowPower_echo` 不是一个完全脱离 STM32CubeU5 的独立工程。为了让 STM32CubeIDE 工程、ThreadX 中间件、HAL 驱动和相对路径都能正确解析，复现者需要先下载 ST 官方 STM32CubeU5，然后将本目录放到官方包的以下位置：
+Important: `Tx_LowPower_echo` is not a fully standalone project separated from STM32CubeU5. To allow the STM32CubeIDE project, ThreadX middleware, HAL drivers, and relative paths to be resolved correctly, readers should first download the official ST STM32CubeU5 package and then place this directory at the following location:
 
 ```text
 <STM32CubeU5_ROOT>\Projects\NUCLEO-U575ZI-Q\Applications\ThreadX\Tx_LowPower_echo
 ```
 
-其中 `<STM32CubeU5_ROOT>` 是 ST 官方 STM32CubeU5 根目录，例如：
+Here, `<STM32CubeU5_ROOT>` is the root directory of the official ST STM32CubeU5 package, for example:
 
 ```text
 D:\ST\STM32CubeU5
 ```
 
-最终目录应类似：
+The final directory should be similar to:
 
 ```text
 D:\ST\STM32CubeU5\Projects\NUCLEO-U575ZI-Q\Applications\ThreadX\Tx_LowPower_echo
 ```
 
-推荐复现步骤：
+Recommended steps:
 
-1. 克隆或下载 ST 官方 STM32CubeU5。
-2. 进入：
+1. Clone or download the official ST STM32CubeU5 package.
+2. Go to:
 
 ```text
 <STM32CubeU5_ROOT>\Projects\NUCLEO-U575ZI-Q\Applications\ThreadX
 ```
 
-3. 将本仓库中的 `stm32-firmware\Tx_LowPower_echo` 整个文件夹复制到该目录下。
-4. 使用 STM32CubeIDE 导入：
+3. Copy the entire `stm32-firmware\Tx_LowPower_echo` folder from this repository into that directory.
+4. Import the following directory with STM32CubeIDE:
 
 ```text
 <STM32CubeU5_ROOT>\Projects\NUCLEO-U575ZI-Q\Applications\ThreadX\Tx_LowPower_echo\STM32CubeIDE
 ```
 
-5. 执行 Clean Project 和 Build Project。
+5. Run Clean Project and Build Project.
 
-如果不放在该官方目录下，工程可能因为相对路径找不到 HAL、CMSIS、ThreadX、启动文件或链接脚本，导致无法编译。
+If the project is not placed under the official directory, compilation may fail because relative paths cannot locate HAL, CMSIS, ThreadX, startup files, or linker scripts.
 
-## 4. 运行模式配置
+## 4. Run Mode Configuration
 
-主要配置文件：
+Main configuration file:
 
 ```text
 Inc/power_test_cfg.h
 ```
 
-数据采集模式：
+Data acquisition mode:
 
 ```c
 #define APP_RUN_MODE APP_RUN_MODE_DATA_CAPTURE
 ```
 
-识别部署模式：
+Recognition deployment mode:
 
 ```c
 #define APP_RUN_MODE APP_RUN_MODE_RECOGNITION
 ```
 
-功耗/功能配置：
+Power/function configurations:
 
-- `APP_PWR_MODE_A_SAMPLING_ONLY`：只采样
-- `APP_PWR_MODE_B_NEAI_ONLY`：只运行 NanoEdge AI 唤醒词筛选
-- `APP_PWR_MODE_C_NEAI_USC_SILENT`：运行 NanoEdge AI + 命令词识别，关闭识别打印
-- `APP_PWR_MODE_D_FULL`：完整逻辑与调试打印
+- `APP_PWR_MODE_A_SAMPLING_ONLY`: sampling only
+- `APP_PWR_MODE_B_NEAI_ONLY`: NanoEdge AI wake-word screening only
+- `APP_PWR_MODE_C_NEAI_USC_SILENT`: NanoEdge AI + command-word recognition with recognition prints disabled
+- `APP_PWR_MODE_D_FULL`: complete logic with debug printing
 
-## 5. NanoEdge AI 静态库环境
+## 5. NanoEdge AI Static Library Environment
 
-根据 ST 官方 wiki，NanoEdge AI Studio 部署包通常包含静态库、头文件、元数据和 emulator。本工程使用：
+According to the official ST wiki, the NanoEdge AI Studio deployment package usually contains a static library, header file, metadata, and emulator. This project uses:
 
 ```text
 Inc/NanoEdgeAI.h
 Middlewares/ST/STM32_AI_Library/Lib/libneai.a
 ```
 
-替换唤醒词模型时：
+When replacing the wake-word model:
 
-1. 从 NanoEdge AI Studio 导出静态库。
-2. 替换 `Inc/NanoEdgeAI.h`。
-3. 替换 `Middlewares/ST/STM32_AI_Library/Lib/libneai.a`。
-4. 检查 `NEAI_INPUT_SIGNAL_LENGTH`、`NEAI_INPUT_AXIS_NUMBER`、`NEAI_NUMBER_OF_CLASSES`。
-5. 确认 `Inc/audio_config.h` 中 `AUDIO_NEAI_FRAME_SAMPLES` 与 `NEAI_INPUT_SIGNAL_LENGTH` 一致。
-6. 确认工程链接 `-lneai`，且库文件名保持为 `libneai.a`。
+1. Export the static library from NanoEdge AI Studio.
+2. Replace `Inc/NanoEdgeAI.h`.
+3. Replace `Middlewares/ST/STM32_AI_Library/Lib/libneai.a`.
+4. Check `NEAI_INPUT_SIGNAL_LENGTH`, `NEAI_INPUT_AXIS_NUMBER`, and `NEAI_NUMBER_OF_CLASSES`.
+5. Confirm that `AUDIO_NEAI_FRAME_SAMPLES` in `Inc/audio_config.h` is consistent with `NEAI_INPUT_SIGNAL_LENGTH`.
+6. Confirm that the project links `-lneai`, and that the library filename remains `libneai.a`.
 
-固件调用 NanoEdge AI 的位置：
+The firmware calls NanoEdge AI in:
 
 ```text
 Src/app_threadx.c
 ```
 
-主要 API：
+Main APIs:
 
 ```c
 neai_classification_init()
@@ -146,21 +148,21 @@ neai_classification(...)
 neai_get_class_name(...)
 ```
 
-## 6. STM32Cube.AI 命令词模型环境
+## 6. STM32Cube.AI Command-Word Model Environment
 
-命令词模型由 TensorFlow/Keras 训练后导出为：
+The command-word model is trained with TensorFlow/Keras and exported as:
 
 ```text
 model.tflite
 ```
 
-在 STM32CubeMX / STM32Cube.AI 中导入 `model.tflite`，网络名称建议保持：
+Import `model.tflite` into STM32CubeMX / STM32Cube.AI. The network name is recommended to remain:
 
 ```text
 usc_network
 ```
 
-保持该名称可以直接匹配当前固件中的调用接口：
+Keeping this name allows the generated code to match the firmware calling interface directly:
 
 ```c
 ai_usc_network_create_and_init(...)
@@ -169,7 +171,7 @@ ai_usc_network_outputs_get(...)
 ai_usc_network_run(...)
 ```
 
-生成或替换的文件：
+Files generated or replaced:
 
 ```text
 Inc/usc_network.h
@@ -181,31 +183,31 @@ Src/usc_network_data.c
 Src/usc_network_data_params.c
 ```
 
-STM32 AI 运行时库：
+STM32 AI runtime library:
 
 ```text
 Middlewares/ST/STM32_AI_Library/Lib/NetworkRuntime800_CM33_GCC.a
 ```
 
-官方 STM32CubeMX 和 X-CUBE-AI 下载页：
+Official STM32CubeMX and X-CUBE-AI download pages:
 
 ```text
 https://www.st.com/en/development-tools/stm32cubemx.html
 https://www.st.com/en/embedded-software/x-cube-ai.html
 ```
 
-## 7. 特征提取一致性检查
+## 7. Feature-Extraction Consistency Check
 
-命令词模型前端参数需要与训练脚本一致。
+The command-word model front-end parameters must be consistent with the training scripts.
 
-检查文件：
+Files to check:
 
 ```text
 Inc/audio_config.h
 Src/usc_preproc.c
 ```
 
-重点参数：
+Key parameters:
 
 - `AUDIO_SAMPLE_RATE_HZ`
 - `AUDIO_USC_FFT_LEN`
@@ -215,60 +217,50 @@ Src/usc_preproc.c
 - `AUDIO_USC_STRIDE_COLS`
 - `AUDIO_USC_FEATURE_COUNT`
 
-当前固件通过 `usc_network.h` 自动推导部分输入尺寸，因此替换模型后要重新检查 `AI_USC_NETWORK_IN_1_*` 宏。
+The current firmware automatically derives part of the input size through `usc_network.h`. Therefore, after replacing the model, recheck the `AI_USC_NETWORK_IN_1_*` macros.
 
-## 8. STM32CubeIDE 编译检查
+## 8. STM32CubeIDE Build Check
 
-导入模型后，建议执行：
+After importing a model, it is recommended to:
 
-1. Clean Project。
-2. Build Project。
-3. 检查是否有缺失头文件。
-4. 检查是否有未链接符号。
-5. 检查 Flash/RAM 占用是否超出 STM32U575VGT6 限制。
+1. Clean Project.
+2. Build Project.
+3. Check whether any header files are missing.
+4. Check whether there are unresolved linked symbols.
+5. Check whether Flash/RAM usage exceeds the limits of STM32U575VGT6.
 
-如果出现链接错误，重点检查：
+If link errors occur, focus on:
 
-- `libneai.a` 是否在库搜索路径中。
-- `NetworkRuntime800_CM33_GCC.a` 是否存在。
-- STM32CubeIDE 中是否包含 `usc_network*.c`。
-- 网络名称是否仍为 `usc_network`。
+- Whether `libneai.a` is in the library search path.
+- Whether `NetworkRuntime800_CM33_GCC.a` exists.
+- Whether `usc_network*.c` is included in STM32CubeIDE.
+- Whether the network name is still `usc_network`.
 
-## 9. 复现检查清单
+## 9. Checklist
 
-1. 下载或克隆 ST 官方 STM32CubeU5。
-2. 将 `Tx_LowPower_echo` 放入官方目录：
+1. Download or clone the official ST STM32CubeU5 package.
+2. Place `Tx_LowPower_echo` into the official directory:
 
 ```text
 <STM32CubeU5_ROOT>\Projects\NUCLEO-U575ZI-Q\Applications\ThreadX\
 ```
 
-3. 确认最终路径为：
+3. Confirm that the final path is:
 
 ```text
 <STM32CubeU5_ROOT>\Projects\NUCLEO-U575ZI-Q\Applications\ThreadX\Tx_LowPower_echo
 ```
 
-4. 用 STM32CubeIDE 导入 `Tx_LowPower_echo\STM32CubeIDE`。
-5. 检查 `Inc/power_test_cfg.h` 中的 `APP_RUN_MODE`。
-6. 如果复现数据采集，设置为 `APP_RUN_MODE_DATA_CAPTURE`。
-7. 如果复现识别部署，设置为 `APP_RUN_MODE_RECOGNITION`。
-8. 如果替换唤醒词模型，更新 `NanoEdgeAI.h` 和 `libneai.a`。
-9. 如果替换命令词模型，更新 `usc_network*` 文件。
-10. Clean、Build、烧录到 STM32U575 设备。
+4. Import `Tx_LowPower_echo\STM32CubeIDE` with STM32CubeIDE.
+5. Check `APP_RUN_MODE` in `Inc/power_test_cfg.h`.
+6. For data acquisition, set it to `APP_RUN_MODE_DATA_CAPTURE`.
+7. For recognition deployment, set it to `APP_RUN_MODE_RECOGNITION`.
+8. If replacing the wake-word model, update `NanoEdgeAI.h` and `libneai.a`.
+9. If replacing the command-word model, update the `usc_network*` files.
+10. Clean, build, and flash the firmware to the STM32U575 device.
 
-## 10. 下载和验证
-
-下载固件后建议按顺序验证：
-
-1. 数据采集模式下，上位机能否收到 UART 数据。
-2. 识别模式下，NanoEdge AI 初始化是否成功。
-3. 唤醒词是否能触发命令词识别阶段。
-4. 10 个有效命令词和 `background` 类是否分类正确。
-5. 蓝牙 AT 指令是否与识别类别一致。
-
-## 11. 参考
+## 10. References
 
 - ST NanoEdge AI Studio wiki: `https://wiki.st.com/stm32mcu/wiki/AI%3ANanoEdge_AI_Studio`
 - STM32CubeU5 official repository: `https://github.com/STMicroelectronics/STM32CubeU5`
-- STM32Cube.AI / X-CUBE-AI 文档请以当前安装的 STM32CubeMX 版本为准。
+- For STM32Cube.AI / X-CUBE-AI documentation, refer to the version included with the currently installed STM32CubeMX.

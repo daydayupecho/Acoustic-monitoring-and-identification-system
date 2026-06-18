@@ -1,208 +1,375 @@
 # Acoustic Monitoring and Identification System
 
-[English version](README.md)
+[Chinese version](README_CH.md)
 
-本仓库用于声学监测与识别系统的程序归档，包含数据采集上位机、唤醒词数据格式转换、命令词数据预处理、命令词识别模型训练以及 STM32 端固件工程。
+This repository archives the software components used in an acoustic monitoring and identification system. It covers the complete workflow from dataset acquisition, data format conversion, command-word model training, and STM32-side deployment to the optional UART-based PC monitoring interface for the Bluetooth receiver.
 
-## 目录结构
+The repository contains:
+
+- A PC host program for dataset acquisition
+- Wake-word dataset conversion tools
+- Command-word preprocessing scripts
+- Command-word recognition model training scripts
+- An STM32 embedded firmware project
+- Bluetooth receiver UART host software and interface resources
+- Circuit diagrams and documentation figures for hardware reference
+
+## Repository Structure
 
 ```text
 Acoustic-monitoring-and-identification-system/
-├── host-acquisition/              # 数据集采集上位机程序
-├── wake-word/                     # 唤醒词相关数据处理程序
+├── host-acquisition/              # Python host program for dataset acquisition
+├── wake-word/                     # Wake-word data processing tools
 │   └── nanoedge-converter/
-├── command-word/                  # 命令词数据处理与模型训练程序
+├── command-word/                  # Command-word preprocessing and model training
 │   ├── preprocessing/
 │   └── model-training/
-├── stm32-firmware/                # STM32 嵌入式端工程
-└── bluetooth-receiver-host/       # 蓝牙接收端上位机程序预留目录
+├── stm32-firmware/                # STM32 embedded firmware project
+│   └── Tx_LowPower_echo/
+├── bluetooth-receiver-host/       # Bluetooth receiver UART host software and UI resources
+└── docs/                          # Reproduction documents and circuit diagrams
+    └── circuit-diagrams/
 ```
 
-## 程序说明
+## 1. Dataset Acquisition Host Program
 
-### 1. 数据集采集上位机
+Path: `host-acquisition/host_acquisition_gui.py`
 
-路径：`host-acquisition/host_acquisition_gui.py`
+This Python program communicates with the STM32 embedded device through a serial port, receives the audio data acquired by the device, displays the waveform in real time, and saves the dataset.
 
-该程序是用 Python 3.13 编写的数据采集上位机，用于通过串口接收下位机采集到的音频数据，并进行实时波形显示和数据保存。
+Main functions:
 
-主要功能：
+- Enumerates and connects to serial devices.
+- Sends control commands such as `START`, `STOP`, and `PING` to the embedded device.
+- Receives and parses audio sample data from the embedded device.
+- Displays the acquired waveform in real time for acquisition-quality inspection.
+- Saves ST HSDatalog-style data files, including `.dat`, `acquisition_info.json`, and `device_config.json`.
+- Provides raw acquisition data for later wake-word and command-word processing.
 
-- 自动枚举串口并连接采集设备。
-- 向下位机发送 `START`、`STOP`、`PING` 等控制指令。
-- 实时解析串口数据流，显示采集波形。
-- 按 ST HSDatalog 风格保存采集数据，包括 `.dat` 数据文件以及 `acquisition_info.json`、`device_config.json` 等配置文件。
-- 为后续唤醒词和命令词数据处理流程提供原始数据。
+Runtime environment:
 
-适用场景：
+- Python 3.13 was used in this work; Python 3.10 or later is recommended.
+- `pyserial`
+- `matplotlib`
 
-- 采集唤醒词、命令词或环境声学数据集。
-- 调试下位机音频采集和串口传输状态。
-- 快速查看采集波形是否正常。
+Before running the program, confirm that:
 
-### 2. 唤醒词数据集格式处理程序
+- The STM32 firmware is configured in data acquisition mode.
+- The serial port and baud rate are correctly configured.
+- The output directory has write permission.
 
-路径：`wake-word/nanoedge-converter/`
+## 2. Wake-Word Dataset Format Converter
 
-该目录用于将自定义 STM32/ST-HSD 风格采集数据转换为 NanoEdge AI Studio 可用的 CSV 格式，主要服务于唤醒词识别或异常检测类模型的数据准备。
+Path: `wake-word/nanoedge-converter/`
 
-#### `dat_to_nanoedge_csv.py`
+This directory converts STM32/ST-HSD-style acquisition data saved by the host program into CSV files that can be imported into NanoEdge AI Studio. It is mainly used for wake-word recognition or anomaly-detection dataset preparation.
 
-核心转换脚本。
+### `dat_to_nanoedge_csv.py`
 
-主要功能：
+Core conversion script.
 
-- 读取每个采集目录中的 `.dat` 数据文件和 JSON 配置文件。
-- 去除传输协议中附加的 4 字节计数器。
-- 去除数据流中周期性插入的时间戳字段。
-- 按指定窗口长度和步长切分音频采样点。
-- 将每个窗口导出为 NanoEdge AI Studio 可导入的 CSV 行或列。
-- 支持按传感器名称、采样率、窗口长度、窗口步长等参数进行转换。
+Main functions:
 
-典型用途：
+- Reads `.dat` data files and JSON configuration files from acquisition folders.
+- Removes the 4-byte protocol counter added during data transmission.
+- Removes periodic timestamp fields inserted in the data stream.
+- Splits audio samples according to the specified window length and window step.
+- Exports CSV files that can be imported into NanoEdge AI Studio.
+- Supports configurable sensor name, sampling rate, window length, window step, and CSV layout.
+
+Typical command:
 
 ```powershell
-python dat_to_nanoedge_csv.py <采集数据根目录> -o <输出目录> -s imp23absu_mic -sl 8192 -si 8192 --odr 16000 --csv-shape row
+python dat_to_nanoedge_csv.py <acquisition_data_root> -o <output_dir> -s imp23absu_mic -sl 8192 -si 8192 --odr 16000 --csv-shape row
 ```
 
-#### `run_nanoedge_conversion.bat`
+Common parameters:
 
-Windows 批处理示例脚本，用于调用 `dat_to_nanoedge_csv.py` 批量转换数据。
+- `<acquisition_data_root>`: root directory containing multiple acquisition folders.
+- `-o`: output directory for generated CSV files.
+- `-s`: sensor name, for example `imp23absu_mic`.
+- `-sl`: sample length of each window.
+- `-si`: step between adjacent windows.
+- `--odr`: sampling rate.
+- `--csv-shape`: CSV output layout supported by the script.
 
-使用前需要根据本机数据位置修改脚本中的：
+### `run_nanoedge_conversion.bat`
 
-- `ROOT`：输入数据根目录。
-- `OUT_ALL`：CSV 输出目录。
-- `SL`：窗口长度。
-- `SI`：窗口步长。
-- `ODR`：采样率。
+A Windows batch example for calling `dat_to_nanoedge_csv.py` in batch mode.
 
-### 3. 命令词数据集格式处理程序
+Before running it, update the following variables according to the local dataset:
 
-路径：`command-word/preprocessing/`
+- `ROOT`: input data root directory.
+- `OUT_ALL`: CSV output directory.
+- `SL`: window length.
+- `SI`: window step.
+- `ODR`: sampling rate.
 
-该目录用于将命令词原始采集数据整理为模型训练所需的数据集格式。
+## 3. Command-Word Dataset Preprocessing Tools
 
-#### `convert_stdatalog_to_wav.ps1`
+Path: `command-word/preprocessing/`
 
-PowerShell 批处理脚本，用于把 ST DATALOG/STDATALOG 采集目录批量转换为 WAV 文件，并可生成失败报告和后续训练用的元数据文件。
+This directory converts and organizes raw command-word acquisition data into the dataset format required for model training.
 
-主要功能：
+### `convert_stdatalog_to_wav.ps1`
 
-- 批量扫描命令词采集目录。
-- 调用 ST 的 `stdatalog_to_wav.py` 工具将 `.dat` 采集数据转换为 `.wav`。
-- 支持多进程并行转换，提高大批量数据处理速度。
-- 使用固定的设备 JSON 配置，避免并行转换时反复写入 catalog。
-- 将转换结果按类别和采集名称整理输出。
-- 记录转换失败的采集项，并导出 CSV/XLSX 失败报告。
-- 可选调用后处理脚本生成 `metadata.csv` 并整理训练目录。
+A PowerShell batch-processing script that converts STM32/ST-HSD-style acquisition data saved by the host program into WAV files, and generates failure reports and metadata for training.
 
-注意事项：
+Main functions:
 
-- 该脚本中包含本机绝对路径，上传或复现前需要修改 `$Root`、`$Out`、`$Py`、`$ToWav`、`$PinnedJsonPath` 等变量。
-- 脚本要求 PowerShell 7 或更高版本。
-- 需要提前配置好 ST DATALOG/STDATALOG Python SDK 环境。
+- Scans command-word acquisition directories in batch.
+- Calls ST's `stdatalog_to_wav.py` tool to convert `.dat` data into `.wav`.
+- Supports parallel processing with PowerShell 7 to speed up large-batch conversion.
+- Uses a pinned device JSON configuration to avoid repeated catalog writes during parallel conversion.
+- Organizes WAV output directories by command class and acquisition name.
+- Exports conversion failure records as CSV/XLSX reports.
+- Optionally runs post-processing to generate `metadata.csv` and organize the training directory.
 
-#### `audit_wav_and_metadata.py`
+Runtime environment:
 
-WAV 数据和 `metadata.csv` 审核脚本。
+- PowerShell 7 or later.
+- ST DATALOG/STDATALOG Python SDK environment.
+- Copy the script to `<STDATALOG-PYSDK_ROOT>\stdatalog-pysdk\`, then configure the STDATALOG-PYSDK environment, script location, and path parameters according to Sections 3-6 of `command-word/preprocessing/ENVIRONMENT.md`.
+- `$Py` should point to the Python interpreter in the STDATALOG-PYSDK virtual environment, for example `<STDATALOG-PYSDK_ROOT>\stdatalog-pysdk\.venv_dlog\Scripts\python.exe`.
+- `$ToWav` should point to the official ST conversion script, for example `<STDATALOG-PYSDK_ROOT>\stdatalog-pysdk\stdatalog_examples\cli_applications\stdatalog_to_wav.py`.
 
-主要功能：
+Notes:
 
-- 检查 `metadata.csv` 中记录的每条采集数据是否存在对应 WAV 文件。
-- 检查 WAV 文件采样点数是否满足模型训练所需的最小长度。
-- 输出缺失、读取失败或长度不足的数据项。
-- 生成 `audit_report.csv`，用于定位数据集中的异常样本。
+- Set `$Root`, `$Out`, `$StageRoot`, `$Py`, `$ToWav`, `$PinnedJsonPath`, `$JsonSources`, and `$DtdlDir` at the beginning of the script according to the local environment.
+- `$Root` points to the command-word `.dat` acquisition data root directory saved by the host program.
+- `$Out` points to the converted WAV output directory.
+- If XLSX report export is enabled, install `openpyxl` in the corresponding Python environment.
 
-典型用途：
+### `audit_wav_and_metadata.py`
+
+A checking script for WAV files and `metadata.csv`.
+
+Main functions:
+
+- Checks whether each sample recorded in `metadata.csv` has a corresponding WAV file.
+- Checks whether each WAV file satisfies the required model input length.
+- Reports missing files, read failures, or samples with insufficient length.
+- Generates `audit_report.csv` for locating abnormal dataset samples.
+
+Runtime environment:
+
+- Python 3.x
+- `soundfile`
+
+Typical command:
 
 ```powershell
-python audit_wav_and_metadata.py <数据集根目录> <frame_len> [offset]
+python audit_wav_and_metadata.py <dataset_root> <frame_len> [offset]
 ```
 
-示例：
+Example:
 
 ```powershell
-python audit_wav_and_metadata.py E:\SPEECH_DATA\20251029-command 188416 0
+cd D:\workspace\project\keil\thesis_speech_recognition
+python .\audit_wav_and_metadata.py "E:\SPEECH_DATA\TENG\touming-dataset\command-20260315-merge" 19456 0
 ```
 
-### 4. 命令词识别模型训练脚本
+Here, `19456` is the required number of WAV samples for this check, and `0` is the reading offset.
 
-路径：`command-word/model-training/`
+## 4. Command-Word Recognition Model Training Scripts
 
-该目录用于命令词识别模型的数据准备、特征提取、训练、评估和可视化分析。
+Path: `command-word/model-training/`
 
-#### `prepare_command_dataset.py`
+This directory is used for command-word dataset preparation, feature extraction, model training, evaluation, and visualization.
 
-命令词数据准备脚本，封装了 `UltrasoundDataHelper` 数据处理类。
+### `prepare_command_dataset.py`
 
-主要功能：
+A command-word dataset preparation script that mainly provides the `UltrasoundDataHelper` data-processing class.
 
-- 读取命令词 WAV 数据集和元数据。
-- 按类别加载样本，例如风扇开关、灯光开关、电视开关等命令词类别。
-- 对原始音频执行偏移裁剪、分帧和样本切分。
-- 提取 Mel 频谱、MFCC 等特征。
-- 自动划分训练集、验证集和测试集。
-- 为后续 TensorFlow/Keras 模型训练准备输入数据和标签。
+Main functions:
 
-适用场景：
+- Reads command-word WAV datasets and metadata.
+- Loads command-word samples by class.
+- Applies offset cropping, framing, and sample segmentation to audio data.
+- Extracts features such as Mel spectrograms and MFCCs.
+- Automatically splits the dataset into training, validation, and test sets.
+- Prepares input data and labels for TensorFlow/Keras model training.
+- Maintains compatibility with part of the ST HSDatalog data-reading environment.
 
-- 训练命令词分类模型前的数据准备。
-- 对不同采样率、帧长、MFCC 参数进行实验。
-- 检查数据集切分和特征形状是否符合模型输入要求。
+Runtime environment:
 
-#### `train_command_classifier.ipynb`
+- Python 3.x
+- `numpy`
+- `pandas`
+- `librosa`
+- `scipy`
+- `scikit-learn`
+- `tensorflow`
+- Optional: `stdatalog_core` or `st_hsdatalog`
 
-命令词分类模型训练 Notebook。
+### `train_command_classifier.ipynb`
 
-主要功能：
+A Jupyter Notebook for command-word classification model training.
 
-- 调用数据准备脚本生成训练数据。
-- 构建和训练命令词分类模型。
-- 输出模型训练过程和评估指标。
-- 导出分类报告、性能结果和可视化图表。
-- 支持 ROC、t-SNE、MFCC 聚类等分析图的生成，用于观察不同命令词类别的可分性。
+Main functions:
 
-适用场景：
+- Calls the dataset preparation script to generate training data.
+- Builds and trains the command-word classification model.
+- Outputs training progress, test results, and evaluation metrics.
+- Exports classification reports and model performance results.
+- Generates ROC, t-SNE, and MFCC clustering visualizations to analyze class separability.
 
-- 交互式调参和模型训练。
-- 展示模型训练结果。
-- 生成论文或报告中需要的评估图表。
+Before training, select the command-word training virtual environment in VS Code or Jupyter, for example `usc_train (Python 3.10.1)`, and configure the following notebook parameters:
 
-### 5. STM32 嵌入式端固件工程
+- `dataset_path`: command-word dataset root directory, usually containing `metadata.csv` and `wav/`.
+- `frame_length`: number of raw audio samples used for one inference window.
+- `classes`: class list and order, which must match the class mapping used in the firmware.
 
-路径：`stm32-firmware/Tx_LowPower_echo/`
+See `command-word/model-training/ENVIRONMENT.md` for detailed steps.
 
-该目录为 STM32U575 平台上的嵌入式端工程，包含音频采集、特征提取、AI 推理、串口调试和低功耗相关代码。工程保留了 STM32CubeIDE、Keil MDK-ARM 和 IAR EWARM 等工具链相关文件。
+Typical use cases:
 
-主要内容：
+- Command-word recognition model training.
+- Model parameter tuning.
+- Generation of experimental figures for papers or reports.
 
-- `Src/`：应用源代码，包括音频采集、特征提取、AI 推理、串口调试、ThreadX 任务等。
-- `Inc/`：头文件和模型相关配置文件。
-- `STM32CubeIDE/`：STM32CubeIDE 工程文件。
-- `MDK-ARM/`：Keil MDK 工程文件。
-- `EWARM/`：IAR EWARM 工程文件。
-- `Middlewares/`：ST AI 库、NanoEdge AI 库等中间件。
-- `docs/`：文档资料。
-- `Tx_LowPower.ioc`：STM32CubeMX 工程配置文件。
+## 5. STM32 Embedded Firmware Project
 
-主要功能：
+Path: `stm32-firmware/Tx_LowPower_echo/`
 
-- 基于 STM32U575 采集麦克风音频数据。
-- 执行前端特征提取，例如窗函数、FFT、Mel 滤波器、MFCC 等。
-- 运行嵌入式 AI 模型进行命令词或声学状态识别。
-- 通过 UART 输出调试信息或识别结果。
-- 支持 ThreadX 低功耗相关框架。
+This directory contains the embedded firmware project for the STM32U575 platform, including audio acquisition, feature extraction, AI inference, serial communication, and low-power related code.
 
-### 6. 蓝牙接收端上位机程序
+Main contents:
 
-路径：`bluetooth-receiver-host/`
+- `Src/`: application source code, including audio acquisition, feature extraction, AI inference, UART debugging, and ThreadX tasks.
+- `Inc/`: header files and model-related configuration.
+- `Inc/power_test_cfg.h`: run-mode and power-test configuration.
+- `STM32CubeIDE/`: STM32CubeIDE project files.
+- `MDK-ARM/`: Keil MDK project files.
+- `EWARM/`: IAR EWARM project files.
+- `Middlewares/`: ST AI library, NanoEdge AI library, and other middleware.
+- `docs/`: flowcharts, BOM files, and system documentation figures.
+- `Tx_LowPower.ioc`: STM32CubeMX project configuration file.
 
-该目录目前为空，建议后续用于存放蓝牙接收端上位机同步显示程序。若该功能已经合并到 `host-acquisition/`，也可以删除该空目录，避免 GitHub 读者误以为缺少文件。
+Main functions:
 
-## 推荐使用流程
+- Acquires microphone audio data.
+- Performs front-end feature extraction, such as windowing, FFT, Mel filtering, and MFCC extraction.
+- Runs embedded AI models for command-word or acoustic-state recognition.
+- Outputs debug information, acquisition data, or recognition results through UART.
+- Supports the ThreadX low-power framework.
 
-1. 将训练完成的模型和参数部署到 `stm32-firmware/Tx_LowPower_echo/` 对应固件工程中。并修改为APP_RUN_MODE_DATA_CAPTURE模式，用于数据集采集。
-2. 使用 `host-acquisition/host_acquisition_gui.py` 连接下位机并采集原始数据,可以用于采集唤醒词数据集和命令词数据集。
-3. 如果处理唤醒词数据，使用 `wake-word/nanoedge-converter/dat_to_nanoedge_csv.py` 转换为 NanoEdge AI 所需 CSV,然后使用NanoEdge AI Studio进行数据预处理和模型训练。
-4. 如果处理命令词数据，使用 `command-word/preprocessing/convert_stdatalog_to_wav.ps1` 将原始采集数据转换为 WAV。使用 `command-word/preprocessing/audit_wav_and_metadata.py` 检查 WAV 文件和元数据完整性。使用 `command-word/model-training/prepare_command_dataset.py` 和 `train_command_classifier.ipynb` 训练并评估命令词识别模型。
+Run modes:
+
+- For dataset acquisition, set `APP_RUN_MODE` in `Inc/power_test_cfg.h` to `APP_RUN_MODE_DATA_CAPTURE`.
+- For model recognition, set `APP_RUN_MODE` to `APP_RUN_MODE_RECOGNITION`.
+
+## 6. Bluetooth Receiver UART Host Program
+
+Path: `bluetooth-receiver-host/`
+
+This directory stores the Bluetooth receiver UART host program, communication documentation, and interface resources. Consistent with Supporting Information Fig. S36, the MATLAB App does not directly receive Bluetooth wireless-link data and does not participate in speech recognition or control decisions. It only receives relay states, parsed results, or status strings from the Bluetooth receiver through the PC serial port/UART, and displays them on the host interface.
+
+Main contents:
+
+- `xiaobiao.mlapp`, `white-background.mlapp` or equivalent `.mlapp` files: MATLAB App Designer projects.
+- Bluetooth communication documentation: serial communication notes between the Bluetooth receiver and the host.
+- `data.txt`: example data output by the Bluetooth receiver through UART.
+- `.png`, `.jpg`, `.gif`: images and animations used by the host interface.
+- `app1.prj`: MATLAB App/project file.
+
+Functional role:
+
+- The Bluetooth receiver includes BLE receiving and MCU command parsing, and controls five relay/outlet channels.
+- The MATLAB App is an optional PC monitoring interface that displays relay or appliance states.
+- Speech recognition, command classification, and relay control decisions are completed by the embedded device and the Bluetooth receiver control module, not by the MATLAB App.
+
+Runtime environment:
+
+- MATLAB.
+- If MATLAB serial communication functions are used, confirm the required MATLAB toolbox according to the actual `.mlapp` project.
+
+## 7. System Development Workflow
+
+This repository corresponds to the following complete development workflow. The root README only describes the system-level workflow. Detailed environment setup, official package downloads, required directory placement, and parameter configuration are provided in the module-level `ENVIRONMENT.md` files.
+
+### 7.1 Firmware Preparation
+
+1. Download the official ST STM32CubeU5 firmware package.
+2. Place `stm32-firmware/Tx_LowPower_echo/` in the following official directory:
+
+```text
+<STM32CubeU5_ROOT>/Projects/NUCLEO-U575ZI-Q/Applications/ThreadX/Tx_LowPower_echo
+```
+
+3. Configure the run mode in `Inc/power_test_cfg.h`.
+   - Use `APP_RUN_MODE_DATA_CAPTURE` for dataset acquisition.
+   - Use `APP_RUN_MODE_RECOGNITION` for system deployment.
+4. Compile and flash the firmware with STM32CubeIDE.
+
+### 7.2 Data Acquisition
+
+1. Run `host-acquisition/host_acquisition_gui.py`.
+2. Establish a UART connection with the embedded device.
+3. Acquire audio data from the S-TAU output.
+4. Save raw data files such as `.dat`, `acquisition_info.json`, and `device_config.json`.
+
+### 7.3 Wake-Word Model Development
+
+1. Use `wake-word/nanoedge-converter/dat_to_nanoedge_csv.py` to convert wake-word raw `.dat` data into CSV files for NanoEdge AI Studio.
+2. Create a binary-classification project in NanoEdge AI Studio.
+3. Import `echo` positive samples and non-wake-word negative samples.
+4. Run Benchmark and Validation.
+5. Export the NanoEdge AI static library.
+6. Integrate the exported `NanoEdgeAI.h` and `libneai.a` into `stm32-firmware/Tx_LowPower_echo/`.
+
+### 7.4 Command-Word Model Development
+
+1. Place the command-word raw `.dat` data in the official ST STDATALOG-PYSDK environment.
+2. Use `command-word/preprocessing/convert_stdatalog_to_wav.ps1` to convert the data into WAV files.
+3. Use `audit_wav_and_metadata.py` to check the WAV files and `metadata.csv`.
+4. Place the training scripts in the official FP-AI-MONITOR2 `UltrasoundClassification` example directory.
+5. Use `prepare_command_dataset.py` and `train_command_classifier.ipynb` to train the 11-class command-word model.
+6. Export `model.tflite`.
+7. Use STM32CubeMX / STM32Cube.AI to convert `model.tflite` into MCU C code.
+8. Integrate the generated `usc_network*` files into `stm32-firmware/Tx_LowPower_echo/`.
+
+### 7.5 System Deployment and Verification
+
+1. Switch the firmware to `APP_RUN_MODE_RECOGNITION`.
+2. Compile and flash the complete firmware.
+3. Test whether the wake-word stage correctly triggers the command-word recognition stage.
+4. Test the 10 valid command classes and the `background` class.
+5. Check whether the firmware-side Bluetooth AT commands, Bluetooth receiver parsing result, relay state, and MATLAB host UART display are consistent.
+
+## 8. Detailed Environment Configuration
+
+Detailed environment setup, official download links, required file locations, and parameters are documented in each module:
+
+| Module | Documentation | Main contents |
+|---|---|---|
+| Dataset acquisition host | `host-acquisition/ENVIRONMENT.md` | Python dependencies, serial connection, acquisition parameters |
+| Wake-word module overview | `wake-word/ENVIRONMENT.md` | NanoEdge AI Studio workflow overview |
+| Wake-word CSV conversion | `wake-word/nanoedge-converter/ENVIRONMENT.md` | CSV conversion parameters, NanoEdge AI Studio import, static library export |
+| Command-word module overview | `command-word/ENVIRONMENT.md` | STDATALOG-PYSDK and FP-AI-MONITOR2 placement requirements |
+| Command-word preprocessing | `command-word/preprocessing/ENVIRONMENT.md` | Required placement under STDATALOG-PYSDK, `.dat` to WAV conversion, path parameters |
+| Command-word training | `command-word/model-training/ENVIRONMENT.md` | Required placement under FP-AI-MONITOR2 UltrasoundClassification, training dependencies, `model.tflite` export |
+| STM32 firmware overview | `stm32-firmware/ENVIRONMENT.md` | STM32CubeU5 official directory and model integration overview |
+| STM32 firmware project | `stm32-firmware/Tx_LowPower_echo/ENVIRONMENT.md` | Required placement under the STM32CubeU5 ThreadX directory, NanoEdge AI and STM32Cube.AI integration |
+| Bluetooth receiver UART host | `bluetooth-receiver-host/ENVIRONMENT.md` | MATLAB App, UART serial receiving, interface resources |
+
+## 9. Official Software Download Links
+
+The following official tools or packages are required to reproduce the workflow:
+
+- STM32CubeU5: `https://github.com/STMicroelectronics/STM32CubeU5`
+- STDATALOG-PYSDK: `https://github.com/STMicroelectronics/stdatalog-pysdk`
+- FP-AI-MONITOR2: `https://www.st.com/en/embedded-software/fp-ai-monitor2.html`
+- STM32CubeMX: `https://www.st.com/en/development-tools/stm32cubemx.html`
+- X-CUBE-AI / STM32Cube.AI: `https://www.st.com/en/embedded-software/x-cube-ai.html`
+- NanoEdge AI Studio wiki: `https://wiki.st.com/stm32mcu/wiki/AI%3ANanoEdge_AI_Studio`
+- NanoEdge AI Studio download entry: `https://stm32ai.st.com/nanoedge-ai-studio/`
+
+## Reproduction Notes
+
+- Readers should start from this root README and then refer to each module's `ENVIRONMENT.md` for detailed environment configuration.
+- Data input directories, output directories, Python interpreter paths, and official ST tool paths in scripts should be set according to the local installation.
+- IDE build outputs, cache files, logs, and temporary files are not required inputs for reproducing the workflow and can be regenerated locally.
+- If ST AI libraries, NanoEdge AI libraries, or STM32Cube.AI-generated files are subject to ST software-package or license constraints, follow the official ST packages, tool-exported files, and the instructions in this repository.
+- Large images, animations, presentations, DOCX files, or data files that are not included in the repository should be regenerated according to the documented directory structure and data acquisition workflow.
+- Dataset directory format, dependency installation commands, and key parameters are specified in the corresponding module-level `ENVIRONMENT.md` files.

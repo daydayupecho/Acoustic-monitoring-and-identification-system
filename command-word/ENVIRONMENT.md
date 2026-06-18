@@ -1,29 +1,29 @@
-# 环境配置说明：命令词模块
+# Environment Setup: Command-Word Module
 
-本目录包含命令词数据预处理和模型训练两部分。
+This directory contains two parts of the command-word workflow: data preprocessing and model training.
 
-子目录：
+Subdirectories:
 
 ```text
 preprocessing/
 model-training/
 ```
 
-详细配置：
+Detailed setup instructions:
 
-- 数据预处理：`preprocessing/ENVIRONMENT.md`
-- 模型训练：`model-training/ENVIRONMENT.md`
+- Data preprocessing: `preprocessing/ENVIRONMENT.md`
+- Model training: `model-training/ENVIRONMENT.md`
 
-## 推荐工具
+## Recommended Tools
 
-- PowerShell 7 或更高版本
-- Python 3.10 或 3.11
-- Jupyter Notebook / JupyterLab
+- PowerShell 7
+- Python 3.10 or 3.11
+- Visual Studio Code (VS Code), used to run the training Notebook
 - TensorFlow / Keras
 - STM32CubeMX + STM32Cube.AI
 - STM32CubeIDE
 
-官方来源：
+Official sources:
 
 ```text
 STDATALOG-PYSDK:
@@ -39,25 +39,25 @@ X-CUBE-AI:
 https://www.st.com/en/embedded-software/x-cube-ai.html
 ```
 
-## 必须放置到官方目录的程序
+## Programs That Must Be Placed in Official ST Directories
 
-为了复现本文流程，两个子目录的程序需要放到对应 ST 官方包中运行。
+The programs in the two subdirectories should be run inside the corresponding official ST packages.
 
 ### 1. `preprocessing`
 
-将：
+Copy:
 
 ```text
 preprocessing/convert_stdatalog_to_wav.ps1
 ```
 
-复制到：
+to:
 
 ```text
 <STDATALOG-PYSDK_ROOT>\stdatalog-pysdk\
 ```
 
-即最终路径应为：
+The final path should be:
 
 ```text
 <STDATALOG-PYSDK_ROOT>\stdatalog-pysdk\convert_stdatalog_to_wav.ps1
@@ -65,41 +65,41 @@ preprocessing/convert_stdatalog_to_wav.ps1
 
 ### 2. `model-training`
 
-将：
+Copy:
 
 ```text
 model-training/prepare_command_dataset.py
 model-training/train_command_classifier.ipynb
 ```
 
-复制到 FP-AI-MONITOR2 官方示例目录：
+to the official FP-AI-MONITOR2 example directory:
 
 ```text
 <FP-AI-MONITOR2_ROOT>\Utilities\AI_Resources\TrainingScripts\UltrasoundClassification\
 ```
 
-## 开发流程概览
+## Development Workflow Overview
 
-1. 使用 `host-acquisition/` 采集命令词原始数据。
-2. 使用 `preprocessing/convert_stdatalog_to_wav.ps1` 将采集数据转换为 WAV。
-3. 使用 `preprocessing/audit_wav_and_metadata.py` 检查 WAV 和 `metadata.csv`。
-4. 使用 `model-training/prepare_command_dataset.py` 准备训练数据。
-5. 使用 `model-training/train_command_classifier.ipynb` 训练命令词模型。
-6. 导出 `model.tflite`。
-7. 在 STM32CubeMX / STM32Cube.AI 中导入 `model.tflite`，生成 `usc_network*` C 代码。
-8. 将生成代码集成到 `../stm32-firmware/Tx_LowPower_echo/`。
+1. Use `host-acquisition/` to collect raw command-word data.
+2. Use `preprocessing/convert_stdatalog_to_wav.ps1` to convert acquisition data into WAV files.
+3. Use `preprocessing/audit_wav_and_metadata.py` to check the WAV files and `metadata.csv`.
+4. Use `model-training/prepare_command_dataset.py` to prepare the training data.
+5. Use `model-training/train_command_classifier.ipynb` in VS Code to train the command-word model.
+6. Export `model.tflite`.
+7. Import `model.tflite` into STM32CubeMX / STM32Cube.AI and generate the `usc_network*` C files.
+8. Integrate the generated code into `../stm32-firmware/Tx_LowPower_echo/`.
 
-## 与固件的关键一致性
+## Key Consistency Requirements With the Firmware
 
-需要保持一致的内容：
+The following items must remain consistent between the training workflow and the firmware:
 
-- 命令词类别顺序
-- 背景类是否为最后一类
-- MFCC / Mel 特征参数
-- 模型输入形状
-- 固件中的 AT 指令映射
+- Command-word class order
+- Whether the background class is the last class
+- MFCC / Mel feature parameters
+- Model input shape
+- AT-command mapping in the firmware
 
-固件中需要重点检查：
+Firmware files that should be checked carefully:
 
 ```text
 ../stm32-firmware/Tx_LowPower_echo/Inc/audio_config.h

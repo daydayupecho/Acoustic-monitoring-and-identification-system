@@ -1,87 +1,90 @@
-# 环境配置说明：数据采集上位机
+# Environment Setup: Dataset Acquisition Host
 
-本目录包含 Python 数据采集上位机：
+[Chinese version](ENVIRONMENT_CH.md)
+
+This directory contains the Python host program for dataset acquisition:
 
 ```text
 host_acquisition_gui.py
 ```
 
-该程序通过串口与 STM32 下位机通信，用于实时显示采集波形并保存 ST HSDatalog 风格的数据文件。
+The program communicates with the STM32 embedded device through a serial port. It is used to display the acquired waveform in real time and save ST HSDatalog-style data files.
 
-## 1. 推荐环境
+## 1. Recommended Environment
 
-- 操作系统：Windows 10/11
-- Python：3.13（本文实验使用版本）；建议使用 Python 3.10 及以上
-- STM32 固件：需要烧录支持 UART 数据采集握手的固件
-- 串口驱动：根据 USB 转串口芯片安装对应驱动
+- Operating system: Windows 10/11
+- Python: 3.13 was used in this work; Python 3.10 or later is recommended
+- STM32 firmware: firmware supporting UART data-acquisition handshaking must be flashed
+- Serial driver: install the corresponding driver according to the USB-to-serial chip
 
-本程序不依赖 ST 官方 Python 包，可以直接在本仓库目录中运行，不需要放到 STM32CubeU5 或 STDATALOG-PYSDK 目录下。
+This program does not depend on official ST Python packages. It can be run directly in this repository and does not need to be placed under STM32CubeU5 or STDATALOG-PYSDK.
 
-## 2. Python 依赖
+## 2. Python Dependencies
 
-脚本主要依赖：
+The script mainly depends on:
 
-- `pyserial`：串口通信
-- `matplotlib`：波形显示
-- `tkinter`：Python 标准库组件，通常随 Python 一起安装
+- `pyserial`: serial communication
+- `matplotlib`: waveform display
+- `tkinter`: Python standard-library component, usually installed together with Python
 
-安装命令：
+Install the dependencies:
 
 ```powershell
 python -m pip install pyserial matplotlib
 ```
 
-检查依赖是否可用：
+Check whether the dependencies are available:
 
 ```powershell
 python -c "import serial, matplotlib, tkinter; print('host-acquisition environment OK')"
 ```
 
-## 3. 固件端配置
+## 3. Firmware Configuration
 
-采集数据前，需要将 STM32 固件切换到数据采集模式。
+Before acquiring data, switch the STM32 firmware to data acquisition mode.
 
-在以下文件中配置：
+Configure the following file:
 
 ```text
 ../stm32-firmware/Tx_LowPower_echo/Inc/power_test_cfg.h
 ```
 
-将运行模式设置为：
+Set the run mode to:
 
 ```c
 #define APP_RUN_MODE APP_RUN_MODE_DATA_CAPTURE
 ```
 
-然后重新编译并烧录固件。
+Then rebuild and flash the firmware.
 
-固件工程本身需要放在 ST 官方 STM32CubeU5 包的指定目录下，具体见：
+The firmware project itself must be placed under the specified directory in the official ST STM32CubeU5 package. See:
 
 ```text
 ../stm32-firmware/Tx_LowPower_echo/ENVIRONMENT.md
 ```
 
-## 4. 运行方式
+## 4. How to Run
 
-在本目录打开 PowerShell：
+Use PyCharm 2025.2.2 to run the following script:
 
-```powershell
-cd <repo>\host-acquisition
-python host_acquisition_gui.py
+```text
+<repo>\host-acquisition\host_acquisition_gui.py
 ```
 
-运行后需要在界面中设置或确认：
+Open the `host-acquisition` directory or the entire repository in PyCharm, confirm that the project interpreter is a Python environment with the required dependencies installed, and then click the run button for `host_acquisition_gui.py` to start the host program.
 
-- `Serial Port`：选择 STM32 设备对应的虚拟串口。
-- `Baud Rate`：与固件 UART 配置保持一致。
-- `Save root`：选择数据保存根目录。
-- `Capture time (s)`：设置采集时长。
+After the program starts, set or confirm the following items in the interface:
 
-采集开始前，程序会与固件进行 `PING` / `READY` / `START` 握手。
+- `Serial Port`: select the virtual serial port corresponding to the STM32 device.
+- `Baud Rate`: keep it consistent with the firmware UART configuration.
+- `Save root`: select the root directory for saving data.
+- `Capture time (s)`: set the acquisition duration.
 
-## 5. 串口通信约定
+Before acquisition starts, the program performs a `PING` / `READY` / `START` handshake with the firmware.
 
-上位机与下位机使用简单的文本握手命令：
+## 5. Serial Communication Convention
+
+The host program and the embedded device use simple text handshake commands:
 
 - `PING`
 - `START`
@@ -91,39 +94,28 @@ python host_acquisition_gui.py
 - `OK_STOP`
 - `ERR_START`
 
-如果无法开始采集，优先检查：
+If acquisition cannot start, check the following items first:
 
-- 固件是否处于 `APP_RUN_MODE_DATA_CAPTURE`。
-- 串口号是否正确。
-- 波特率是否与固件端一致。
-- 串口是否被 STM32CubeIDE、串口助手或其他程序占用。
+- Whether the firmware is in `APP_RUN_MODE_DATA_CAPTURE`.
+- Whether the selected serial port is correct.
+- Whether the baud rate is consistent with the firmware side.
+- Whether the serial port is occupied by STM32CubeIDE, a serial-port assistant, or another program.
 
-## 6. 输出数据格式
+## 6. Output Data Format
 
-上位机保存的数据会作为后续唤醒词和命令词处理流程的输入，通常包含：
+The data saved by the host program is used as the input for the subsequent wake-word and command-word processing workflows. It usually includes:
 
-- `.dat` 原始采样数据
+- `.dat` raw sample data
 - `acquisition_info.json`
 - `device_config.json`
 
-后续处理入口：
+Subsequent processing entry points:
 
-- 唤醒词：`../wake-word/nanoedge-converter/dat_to_nanoedge_csv.py`
-- 命令词：`../command-word/preprocessing/convert_stdatalog_to_wav.ps1`
+- Wake word: `../wake-word/nanoedge-converter/dat_to_nanoedge_csv.py`
+- Command word: `../command-word/preprocessing/convert_stdatalog_to_wav.ps1`
 
-## 7. 复现时需要设置或确认的内容
+## 7. Troubleshooting
 
-运行时只需要在界面中设置本机采集参数，不需要改源码：
-
-- 选择自己的串口号。
-- 确认波特率。
-- 选择数据保存目录。
-- 根据实验设置修改采集时长。
-
-如果使用其他 STM32 工程，需要确认固件端输出格式仍为本项目约定的 UART 数据帧，否则后续 `.dat` 解析和 NanoEdge CSV 转换可能不匹配。
-
-## 8. 常见问题
-
-- 如果看不到串口，先检查 USB 线、驱动和设备管理器。
-- 如果能连接但没有数据，检查下位机是否已经进入采集模式。
-- 如果保存后的 `.dat` 后续无法解析，确认采样率、传感器名称和固件传输格式没有变化。
+- If no serial port is visible, first check the USB cable, driver, and Windows Device Manager.
+- If the program can connect but no data is received, check whether the embedded device has entered acquisition mode.
+- If the saved `.dat` file cannot be parsed in later steps, confirm that the sampling rate, sensor name, and firmware transmission format have not changed.

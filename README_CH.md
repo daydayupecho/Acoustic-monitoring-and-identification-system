@@ -1,6 +1,6 @@
 # Acoustic Monitoring and Identification System 中文说明
 
-[English version](README_EN.md) | [当前 README](README.md)
+[English version](README.md)
 
 本仓库用于声学监测与识别系统的程序归档，覆盖从数据采集、数据格式转换、命令词模型训练到 STM32 端部署的完整流程。仓库主要包含以下部分：
 
@@ -10,6 +10,7 @@
 - 命令词识别模型训练脚本
 - STM32 嵌入式端固件工程
 - 蓝牙接收端 UART 上位机程序及界面资源
+- 硬件电路图和系统说明图
 
 ## 目录结构
 
@@ -23,7 +24,9 @@ Acoustic-monitoring-and-identification-system/
 │   └── model-training/
 ├── stm32-firmware/                # STM32 嵌入式端工程
 │   └── Tx_LowPower_echo/
-└── bluetooth-receiver-host/       # 蓝牙接收端 UART 上位机程序与界面素材
+├── bluetooth-receiver-host/       # 蓝牙接收端 UART 上位机程序与界面素材
+└── docs/                          # 复现说明文档和电路图
+    └── circuit-diagrams/
 ```
 
 ## 1. 数据采集上位机

@@ -1,36 +1,38 @@
-# 环境配置说明：唤醒词 NanoEdge AI 数据转换
+# Environment Setup: Wake-Word NanoEdge AI Data Conversion
 
-本目录用于将上位机保存的 `.dat` 采集数据转换为 NanoEdge AI Studio 可导入的 CSV 文件。
+[Chinese version](ENVIRONMENT_CH.md)
 
-主要程序：
+This directory is used to convert `.dat` acquisition data saved by the host program into CSV files that can be imported into NanoEdge AI Studio.
+
+Main programs:
 
 ```text
 dat_to_nanoedge_csv.py
 run_nanoedge_conversion.bat
 ```
 
-## 1. 推荐环境
+## 1. Recommended Environment
 
-- 操作系统：Windows 10/11
-- Python：3.10 及以上
-- NanoEdge AI Studio：建议使用与实验一致的 v5.1.1 或更高版本
-- 固件侧采样率：16 kHz
+- Operating system: Windows 10/11
+- Python: 3.10 or later
+- NanoEdge AI Studio: version v5.1.1 is recommended
+- Firmware-side sampling rate: 16 kHz
 
-ST 官方 NanoEdge AI Studio wiki：
+ST official NanoEdge AI Studio wiki:
 
 ```text
 https://wiki.st.com/stm32mcu/wiki/AI%3ANanoEdge_AI_Studio
 ```
 
-NanoEdge AI Studio 下载入口可从 ST Edge AI / NanoEdge AI Studio 页面进入：
+NanoEdge AI Studio can be downloaded from the ST Edge AI / NanoEdge AI Studio page:
 
 ```text
 https://stm32ai.st.com/nanoedge-ai-studio/
 ```
 
-## 2. Python 依赖
+## 2. Python Dependencies
 
-`dat_to_nanoedge_csv.py` 只使用 Python 标准库：
+`dat_to_nanoedge_csv.py` only uses the Python standard library:
 
 - `argparse`
 - `csv`
@@ -38,61 +40,61 @@ https://stm32ai.st.com/nanoedge-ai-studio/
 - `struct`
 - `pathlib`
 
-一般不需要额外安装第三方 Python 包。
+Generally, no additional third-party Python packages are required.
 
-检查命令：
+Check command:
 
 ```powershell
 python dat_to_nanoedge_csv.py --help
 ```
 
-该脚本可以直接在本目录中运行，不需要放入 ST 官方工程目录。
+This script can be run directly in this directory and does not need to be placed inside an official ST project directory.
 
-## 3. NanoEdge AI Studio 准备
+## 3. NanoEdge AI Studio Preparation
 
-根据 ST 官方说明，NanoEdge AI Studio 用于从传感器数据中搜索预处理、特征提取和机器学习库组合，并导出可在 MCU 上调用的静态库。
+According to the official ST documentation, NanoEdge AI Studio searches combinations of preprocessing, feature extraction, and machine-learning libraries from sensor data, and exports a static library that can be called on an MCU.
 
-使用前需要准备：
+Before use, prepare the following:
 
-- 安装 NanoEdge AI Studio。
-- 登录或配置可用许可证。
-- 明确目标 MCU 和资源限制。
-- 准备每个类别对应的 CSV 数据。
+- Install NanoEdge AI Studio.
+- Log in or configure an available license.
+- Confirm the target MCU and resource constraints.
+- Prepare CSV data for each class.
 
-本项目唤醒词任务为二分类：
+The wake-word task in this project is a binary classification task:
 
-- 正样本：`echo`
-- 负样本：`other` / `unknown` / `background` 等非唤醒词声音
+- Positive samples: `echo`
+- Negative samples: `other` / `unknown` / `background` and other non-wake-word sounds
 
-## 4. 数据转换参数
+## 4. Data Conversion Parameters
 
-典型命令：
+Typical command:
 
 ```powershell
-python dat_to_nanoedge_csv.py <采集数据根目录> -o <输出目录> -s imp23absu_mic -sl 8192 -si 8192 --odr 16000 --csv-shape row
+python dat_to_nanoedge_csv.py <acquisition_data_root> -o <output_dir> -s imp23absu_mic -sl 8192 -si 8192 --odr 16000 --csv-shape row
 ```
 
-参数说明：
+Parameter description:
 
-- `<采集数据根目录>`：上位机保存的采集数据目录。
-- `-o`：CSV 输出目录。
-- `-s`：传感器名称，当前常用 `imp23absu_mic`。
-- `-sl`：窗口长度。
-- `-si`：窗口步长。
-- `--odr`：采样率，当前为 `16000`。
-- `--csv-shape`：CSV 排列方式，当前常用 `row`。
+- `<acquisition_data_root>`: acquisition data directory saved by the host program.
+- `-o`: CSV output directory.
+- `-s`: sensor name. The commonly used value is `imp23absu_mic`; this is the microphone name used by the STEVAL-STWINBX1 development board, while this work uses S-TAU.
+- `-sl`: window length.
+- `-si`: window step.
+- `--odr`: sampling rate, currently `16000`.
+- `--csv-shape`: CSV layout, currently commonly set to `row`.
 
-如果使用批处理脚本：
+If the batch script is used:
 
 ```text
 run_nanoedge_conversion.bat
 ```
 
-运行前需要设置以下变量：
+Set the following variables before running it:
 
 ```bat
-set "ROOT=<唤醒词原始采集数据根目录>"
-set "OUT_ALL=<NanoEdge CSV 输出目录>"
+set "ROOT=<wake-word_raw_acquisition_data_root>"
+set "OUT_ALL=<NanoEdge_CSV_output_directory>"
 set "PYTHON_EXE=python"
 set "CLI=%~dp0dat_to_nanoedge_csv.py"
 set "SENSOR=imp23absu_mic"
@@ -102,31 +104,31 @@ set "ODR=16000"
 set "CSV_SHAPE=row"
 ```
 
-参数含义：
+Parameter meanings:
 
-- `ROOT`：上位机保存的采集数据根目录，目录下应包含多个采集文件夹。
-- `OUT_ALL`：转换后的 CSV 输出目录。
-- `PYTHON_EXE`：Python 解释器命令或绝对路径。
-- `CLI`：转换脚本路径。若批处理文件中仍是旧文件名，需要改为 `dat_to_nanoedge_csv.py`。
-- `SENSOR`：JSON 配置中的传感器名称，当前为 `imp23absu_mic`。
-- `SL`：每个 NanoEdge 样本窗口长度。
-- `SI`：窗口步长。若希望不重叠，设置为与 `SL` 相同。
-- `ODR`：采样率，当前实验为 16 kHz。
-- `CSV_SHAPE`：NanoEdge AI Studio 导入方式，当前建议使用 `row`。
+- `ROOT`: root directory of acquisition data saved by the host program. It should contain multiple acquisition folders.
+- `OUT_ALL`: output directory for converted CSV files.
+- `PYTHON_EXE`: Python interpreter command or absolute path.
+- `CLI`: conversion script path. If the batch file still contains an old script name, change it to `dat_to_nanoedge_csv.py`.
+- `SENSOR`: sensor name in the JSON configuration, currently `imp23absu_mic`.
+- `SL`: length of each NanoEdge sample window.
+- `SI`: window step. To avoid overlap, set it to the same value as `SL`.
+- `ODR`: sampling rate, 16 kHz in the current experiments.
+- `CSV_SHAPE`: NanoEdge AI Studio import layout. The current recommendation is `row`.
 
-复现时，最常需要设置的是 `ROOT`、`OUT_ALL`、`SL`、`SI`。其中 `SL` 必须与最终 NanoEdge AI Studio 导出库中的 `NEAI_INPUT_SIGNAL_LENGTH` 保持一致。
+For reproduction, the most commonly modified variables are `ROOT`, `OUT_ALL`, `SL`, and `SI`. `SL` must be consistent with `NEAI_INPUT_SIGNAL_LENGTH` in the final library exported by NanoEdge AI Studio.
 
-## 5. 与 NanoEdge AI Studio 的对应关系
+## 5. Relationship with NanoEdge AI Studio
 
-CSV 窗口长度必须与 NanoEdge AI Studio 训练和最终导出的库保持一致。
+The CSV window length must be consistent with the NanoEdge AI Studio training setting and the final exported library.
 
-导出库后，需要检查：
+After exporting the library, check:
 
 ```text
 NanoEdgeAI.h
 ```
 
-其中关键宏包括：
+Key macros include:
 
 ```c
 #define NEAI_INPUT_SIGNAL_LENGTH ...
@@ -134,58 +136,58 @@ NanoEdgeAI.h
 #define NEAI_NUMBER_OF_CLASSES ...
 ```
 
-当前固件中 `Inc/audio_config.h` 使用 `NEAI_INPUT_SIGNAL_LENGTH` 作为唤醒词输入窗口长度，因此重新训练模型时，应让以下三处保持一致：
+In the current firmware, `Inc/audio_config.h` uses `NEAI_INPUT_SIGNAL_LENGTH` as the wake-word input window length. Therefore, when retraining the model, keep the following three items consistent:
 
-- CSV 转换时的 `-sl`
-- NanoEdge AI Studio 项目的输入信号长度
-- 固件中导出的 `NanoEdgeAI.h`
+- `-sl` used during CSV conversion
+- Input signal length of the NanoEdge AI Studio project
+- Exported `NanoEdgeAI.h` used in the firmware
 
-## 6. NanoEdge AI Studio 输出文件
+## 6. NanoEdge AI Studio Output Files
 
-根据 ST 官方 wiki，编译/部署后得到的库包通常包含：
+According to the official ST wiki, the library package generated after compilation/deployment usually contains:
 
-- `libneai.a`：NanoEdge AI 静态库
-- `NanoEdgeAI.h`：API 和模型配置头文件
-- `knowledge.h`：知识文件，具体是否出现取决于项目类型
-- `metadata.json`：库元数据
-- emulator：用于在 PC 上验证库表现
+- `libneai.a`: NanoEdge AI static library
+- `NanoEdgeAI.h`: API and model-configuration header file
+- `knowledge.h`: knowledge file, whether it appears depends on the project type
+- `metadata.json`: library metadata
+- emulator: used to validate the library performance on a PC
 
-本项目导入固件时主要使用：
+This project mainly uses the following files for firmware integration:
 
 ```text
 NanoEdgeAI.h
 libneai.a
 ```
 
-复制目标：
+Copy targets:
 
 ```text
 ../../stm32-firmware/Tx_LowPower_echo/Inc/NanoEdgeAI.h
 ../../stm32-firmware/Tx_LowPower_echo/Middlewares/ST/STM32_AI_Library/Lib/libneai.a
 ```
 
-## 7. 推荐验证
+## 7. Recommended Validation
 
-1. 使用未参与训练的数据在 NanoEdge AI Studio 或 emulator 中验证分类效果。
-2. 检查 `NEAI_INPUT_SIGNAL_LENGTH` 和固件窗口长度。
-3. 将库导入固件后，确认 `neai_classification_init()` 返回 `NEAI_OK`。
-4. 在实际设备上测试唤醒词和负样本，观察是否能稳定进入命令词识别阶段。
+1. Use data not involved in training to validate classification performance in NanoEdge AI Studio or the emulator.
+2. Check `NEAI_INPUT_SIGNAL_LENGTH` and the firmware window length.
+3. After importing the library into the firmware, confirm that `neai_classification_init()` returns `NEAI_OK`.
+4. Test wake-word and negative samples on the actual device and observe whether stable classification results are produced.
 
-## 8. 常见问题
+## 8. Troubleshooting
 
-- 如果 NanoEdge AI Studio Benchmark 结果不好，优先检查数据是否按类别分开、窗口长度是否合理、采样率是否一致。
-- ST 官方建议保持采样方法和传感器参数在所有样本中一致，并检查输入数据中是否混入其他类别或噪声。
-- 对 MCU 端误触发，可以在固件层增加连续多帧确认逻辑；当前固件已通过 `APP_NEAI_WAKE_HITS` 等参数实现类似确认。
+- If the NanoEdge AI Studio Benchmark result is poor, first check whether the data is separated by class, whether the window length is reasonable, and whether the sampling rate is consistent.
+- Sliding-window processing can be used to improve recognition accuracy.
+- For false triggers on the MCU side, continuous multi-frame confirmation can be added in the firmware. The current firmware already implements similar confirmation through parameters such as `APP_NEAI_WAKE_HITS`.
 
-## 9. 复现检查清单
+## 9. Checklist
 
-1. 安装 NanoEdge AI Studio，并确认许可证可用。
-2. 使用本脚本将唤醒词正样本和负样本分别转换为 CSV。
-3. 在 NanoEdge AI Studio 中创建 Classification 项目。
-4. 导入每个类别对应的 CSV。
-5. 设置目标 MCU 和资源限制。
-6. 运行 Benchmark。
-7. 使用未参与 Benchmark 的数据做 Validation 或 emulator 测试。
-8. 导出静态库。
-9. 将 `NanoEdgeAI.h` 和 `libneai.a` 导入 STM32 固件工程。
-10. 重新编译并在 MCU 上验证实时唤醒词筛选。
+1. Install NanoEdge AI Studio and confirm that the license is available.
+2. Use this script to convert wake-word positive samples and negative samples into CSV files separately.
+3. Create a Classification project in NanoEdge AI Studio.
+4. Import the CSV file corresponding to each class.
+5. Set the target MCU and resource constraints.
+6. Run Benchmark.
+7. Use data not involved in Benchmark for Validation or emulator testing.
+8. Export the static library.
+9. Import `NanoEdgeAI.h` and `libneai.a` into the STM32 firmware project.
+10. Rebuild the firmware and validate real-time wake-word screening on the MCU.
